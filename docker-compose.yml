@@ -1,0 +1,16 @@
+services:
+  orders:
+    container_name: orders_service
+    build: .
+    env_file:
+      - ./.env
+    volumes:
+      - .:/app
+    ports:
+      - "8001:8000"
+    networks:
+      - homelab
+
+networks:
+  homelab:
+    external: true

@@ -16,6 +16,7 @@ from app.validators import validate_unique
 
 app = FastAPI()
 
+
 @app.exception_handler(AppValidationError)
 async def app_validation_exception_handler(request: Request, exc: AppValidationError):
     return JSONResponse(

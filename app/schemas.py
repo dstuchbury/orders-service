@@ -5,12 +5,14 @@ from datetime import datetime
 
 
 class OrderCreate(SQLModel):
-    customer_name: str
+    customer_name: str = Field(min_length=1, max_length=100)
+    order_ref: str = Field(min_length=1, max_length=100)
 
 
 class OrderRead(SQLModel):
     order_uuid: UUID
     customer_name: str
+    order_ref: str
     order_date: datetime
     order_status: str
     updated_at: datetime

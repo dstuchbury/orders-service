@@ -5,7 +5,10 @@ from app.schemas import OrderCreate
 
 
 def create_order(session: Session, order_in: OrderCreate):
-    order = Order(customer_name=order_in.customer_name)
+    order = Order(
+        customer_name=order_in.customer_name,
+        order_ref=order_in.order_ref
+    )
     session.add(order)
     session.commit()
     session.refresh(order)

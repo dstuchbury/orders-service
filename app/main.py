@@ -1,14 +1,50 @@
+from urllib.request import Request
+
 from fastapi import FastAPI, Depends, HTTPException, Query
+from fastapi.exceptions import RequestValidationError
+from fastapi.responses import JSONResponse
 from sqlmodel import Session
 from uuid import UUID
 from math import ceil
 
 from app.db import init_db, get_session
+from app.errors import AppValidationError
 from app.schemas import PaginatedOrders, OrderRead, OrderCreate, PaginatedLineItems
-from app.models import LineItem
+from app.models import LineItem, Order
 from app import crud
+from app.validators import validate_unique
 
 app = FastAPI()
+
+@app.exception_handler(AppValidationError)
+async def app_validation_exception_handler(request: Request, exc: AppValidationError):
+    return JSONResponse(
+        status_code=exc.status_code,
+        content={
+            "message": exc.message,
+            "errors": exc.errors,
+        },
+    )
+
+
+@app.exception_handler(RequestValidationError)
+async def request_validation_exception_handler(request: Request, exc: RequestValidationError):
+    errors: dict[str, list[str]] = {}
+
+    for error in exc.errors():
+        location = error.get("loc", [])
+        field_parts = [str(part) for part in location if part != "body"]
+        field = ".".join(field_parts) if field_parts else "body"
+
+        errors.setdefault(field, []).append(error.get("msg", "Invalid value"))
+
+    return JSONResponse(
+        status_code=422,
+        content={
+            "message": "Validation failed",
+            "errors": errors,
+        },
+    )
 
 
 @app.on_event("startup")
@@ -18,6 +54,12 @@ def on_startup():
 
 @app.post("/orders", response_model=OrderRead)
 def create_order(order: OrderCreate, session: Session = Depends(get_session)):
+    validate_unique(
+        session=session,
+        model=Order,
+        field_name="order_ref",
+        value=order.order_ref,
+    )
     new_order = crud.create_order(session, order)
     return new_order
 

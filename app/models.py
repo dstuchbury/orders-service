@@ -5,14 +5,19 @@ from typing import Optional
 
 
 class Order(SQLModel, table=True):
+    __tablename__ = 'orders'
+
     order_uuid: UUID = Field(default_factory=uuid4, primary_key=True)
     customer_name: str
+    order_ref: str = Field(unique=True)
     order_date: datetime = Field(default_factory=datetime.utcnow)
     order_status: str = "pending"
     updated_at: datetime = Field(default_factory=datetime.utcnow)
 
 
 class LineItem(SQLModel, table=True):
+    __tablename__ = 'line_items'
+
     line_item_uuid: UUID = Field(default_factory=uuid4, primary_key=True)
     order_uuid: UUID
     sku: str
